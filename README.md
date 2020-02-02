@@ -1,0 +1,2 @@
+Welcome to CryptoImage!
+In order to run the program, simply clone the project to your machine. Then run "npm run start" in the terminal. This should open up localhost:3000 on your browser. Now you can have fun!
