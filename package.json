@@ -1,0 +1,15 @@
+{
+  "name": "CryptoImage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"cd backend && set FLASK_APP=server.py && set FLASK_DEBUG=1 && flask run\" \"cd frontend && npm start\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^5.1.0"
+  }
+}
