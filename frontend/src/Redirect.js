@@ -1,10 +1,9 @@
 import React from 'react';
 
-const Display = (props) => {
+// Redirects the user whenever URL isn't recognized
+const Redirect = (props) => {
     props.history.push('/encode');
-    return (
-        <div></div>
-    )
+    return ( <div></div> )
 }
 
-export default Display
+export default Redirect

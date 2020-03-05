@@ -1,11 +1,47 @@
 import React from 'react';
+import lock from './lock.png'
 
 class Decode extends React.Component {
     state = {
         imageArray: null,
         imageURI: null,
-        receivedMsg: ''
     }
+    // Sends image to backend and returns the decoded message to the parent to be displayed
+    // Catch error and output error message!
+    getCryptoMsg = async (e) => {
+        e.preventDefault();
+
+        const lockLoadAnime = this.props.getLockLoadAnime();
+        lockLoadAnime.play();
+        this.props.setLockRotating();
+
+        const pageLoadAnime = this.props.getPageLoadAnime();
+        pageLoadAnime.play();
+
+        fetch('http://localhost:5000/decode', {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST',
+            body: JSON.stringify({ imageArray: this.props.arrToBase64(this.state.imageArray) })
+        })
+        .then((res) => res.text())
+        .then((msg) => {
+            this.props.decodeMsg(msg);
+            lockLoadAnime.pause();
+            pageLoadAnime.pause();
+            this.props.revertMainDisplay();
+            this.props.setLockNotRotating();
+        })
+        .catch((err) => {
+            lockLoadAnime.pause();
+            pageLoadAnime.pause();
+            this.props.revertMainDisplay();
+            this.props.setLockNotRotating();
+            this.props.obtainError('Oops! The image does not contain a message.');
+        });
+    }
+    // Takes in an image file and converts it both to URI to display to website + to an array to send to the backend
     processImage = (e) => {
         const readerArray = new FileReader(), readerURI = new FileReader();
         const imageFile = e.target.files[0];
@@ -13,7 +49,7 @@ class Decode extends React.Component {
         if (imageFile) {
             readerArray.readAsArrayBuffer(imageFile);
             readerURI.readAsDataURL(imageFile);
-            document.getElementById('product-display').classList.remove('hidden');
+            document.querySelector('.image-display').classList.remove('hidden');
         }
 
         readerArray.addEventListener('load', () => {
@@ -26,48 +62,26 @@ class Decode extends React.Component {
             this.setState({
                 imageURI: readerURI.result,
             });
+            setTimeout(() => {
+                this.props.scaleImage(document.querySelector('.input-image'));
+            }, 10);
         });
-    }
-    getCryptoMsg = async (e) => {
-        e.preventDefault();
-        this.props.decodeMsg('');
-        const res = await fetch('http://localhost:5000/decode', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            method: 'POST',
-            body: JSON.stringify({ imageArray: this.arrToBase64(this.state.imageArray) })
-        })
-        const data = await res.text();
-        this.props.decodeMsg(data);
-    }
-    arrToBase64(buffer) {
-        let binary = '';
-        let bytes = new Uint8Array(buffer);
-        let len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        return window.btoa(binary);
     }
     render() {
         return (
-            <div id="file-container">
-                <form onSubmit={this.getCryptoMsg}>
-                    <p>Please select an image to cryptify</p>
-                    <input type="file" accept="image/*" onChange={this.processImage} name="imageFile" required/>
-                    <div id="product-display" className="hidden">
-                        <h3>Image Preview</h3>
-                        <img src={this.state.imageURI} alt="Cannot render"/>
-                    </div>
-                    <input type="submit" value="Decodify"/>
-                </form>
-
-                { this.state.receivedMsg.length > 0 &&
+            <form id="decode-form" onSubmit={this.getCryptoMsg}>
                 <div>
-                    <h3>{this.state.receivedMsg}</h3>
-                </div> }
-            </div>   
+                    <input type="file" accept="image/*" onChange={this.processImage} name="imageFile" required/>
+                </div>
+                <div className="image-display hidden">
+                    <h3>Image Preview</h3>
+                    <img className="input-image" src={this.state.imageURI} alt="Cannot render"/>
+                </div>
+                <div className="lock">
+                    <img src={lock} alt="Decodify"/>
+                    <input type="submit" onMouseOver={this.props.shakeLock}/>
+                </div>
+            </form>
         );
     }
 }

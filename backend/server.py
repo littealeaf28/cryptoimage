@@ -28,19 +28,22 @@ def encode():
     imageEncoded = data['imageArray']
     im = Image.open(BytesIO(base64.b64decode(imageEncoded)))
 
-    pixelInterval = 1000
-
+    # Apply Caesar shift to message text
     caesarShift = 700
     for c in msg:
         c = chr((ord(c) + caesarShift) % 256)
+
+    # Resize image to fit all of message plus size (depends if auto interval)
+    pixelInterval = 1000
     
     if (len(msg) * pixelInterval / 3 > (im.size[0] * im.size[1])):
         aspectRatio = im.size[0] / im.size[1]
         squareSize = math.sqrt(len(msg) * pixelInterval / 3)
-        size0 = round(squareSize * aspectRatio + 1) + 1
+        size0 = round(squareSize * aspectRatio + 1) + 1     # Extra 1 necessary for line to include message length
         size1 = round(squareSize / aspectRatio + 1)
         im = im.resize((size0, size1))
 
+    # Convert message to ASCII and apply directly over image
     pixInd = 0
     msgInd = 0
     pixels = im.load()
@@ -56,12 +59,14 @@ def encode():
     except:
         pass
 
+    # Embed the length of the message in the picture (at the top right corner, center right side, bottom right corner) and embed pixel interval
     numZeros = 9 - len(str(len(msg)))
     stringLen = "0" * numZeros + str(len(msg))
     for x in range(3):
         thisPxl = (ord(stringLen[3*x]), ord(stringLen[3*x+1]), ord(stringLen[3*x+2]))
         pixels[im.size[0] - 1, round(im.size[1] - 1)/2*x] = thisPxl
     
+    # Shifts content of new image to a temporary file in order to send image without having it saved to the server
     tempImg = NamedTemporaryFile(mode='w+b', suffix='png')
     im.save('newImg.png', 'png')
     openImg = open('newImg.png', 'rb')
@@ -83,6 +88,7 @@ def decode():
     msg = ""
     pixels = im.load()
 
+    # Find length of the hidden message and pixelInterval using embedded pixels
     lenString = ""
     for x in range(3):
         thisPxl = pixels[im.size[0]-1, round(im.size[1]-1)/2*x]
@@ -90,6 +96,7 @@ def decode():
 
     msgLen = int(lenString)
 
+    # Decode the raw message from the pixels
     pixInd = 0
     msgInd = 0
     try:
@@ -104,6 +111,7 @@ def decode():
     except:
         pass
 
+    # Apply reverse Caesar shift to raw message to get real message
     caesar_shift = 700
     for c in msg:
         c = chr((ord(c) - caesar_shift) % 256)
