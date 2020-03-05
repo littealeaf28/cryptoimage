@@ -10,15 +10,17 @@ class App extends React.Component {
   state = {
     receivedMsg: '',
     receivedImg: '',
-    lockIsRotating: false,
-    errorMsg: ''
+    errorMsg: '',
+    lockIsRotating: false
   }
   // Way for Encode component to pass image to App component
   encodeImg = (receivedImg) => {
     this.setState({
       receivedImg: receivedImg,
+      receivedMsg: '',
+      errorMsg: ''
     });
-    setTimeout(() => {
+    setTimeout(() => {    // Must set a brief time out in order to load the dimensions properly enough to create bounding box; otherwise uses past image's dimensions
       this.scaleImage(document.getElementById('output-image'));
     }, 10);
   }
@@ -26,12 +28,16 @@ class App extends React.Component {
   decodeMsg = (receivedMsg) => {
     this.setState({
       receivedMsg: receivedMsg,
+      receivedImg: '',
+      errorMsg: ''
     });
   }
   // Way for subcomponents to pass error message to App component
   obtainError = (errorMsg) => {
     this.setState({
-      errorMsg: errorMsg
+      errorMsg: errorMsg,
+      receivedMsg: '',
+      receivedImg: ''
     });
   }
   // Converts image array to base 64 string; used to shrink file size in order successfully send to backend
